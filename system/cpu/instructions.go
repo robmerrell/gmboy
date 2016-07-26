@@ -26,6 +26,7 @@ type instruction struct {
 // I'm going off of this list for the info about the opcodes including the mnemonic: http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
 
 var baseInstructions = map[byte]*instruction{
-	0x00: &instruction{"NOP", 12, 3, false, func(c *CPU) {}},
+	0x00: &instruction{"NOP", 4, 1, false, func(c *CPU) {}},
 	0x31: &instruction{"LD SP,d16", 12, 3, false, func(c *CPU) { c.stackPointer = c.operandWord() }},
+	0xAF: &instruction{"XOR A", 4, 1, false, func(c *CPU) { xorRegister(&c.registers.AF.low, c.registers.AF.low) }},
 }

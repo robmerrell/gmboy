@@ -84,3 +84,7 @@ func (c *CPU) Step() {
 func (c *CPU) operandWord() uint16 {
 	return c.mmu.ReadWord(c.programCounter + 1)
 }
+
+func xorRegister(sourceRegister *byte, operandRegister byte) {
+	*sourceRegister ^= operandRegister
+}
