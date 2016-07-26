@@ -48,19 +48,9 @@ func (m *MMU) LoadBootRom(romFile string) error {
 	if len(romContents) > 256 {
 		return errors.New("The bootrom should not exceed 256 bytes in length.")
 	}
-
-	// insert the rom into the memory starting at 0x0000
-	insertAt := 0x0000
-	for _, b := range romContents {
-		m.memory[insertAt] = b
-		insertAt++
-	}
+	m.WriteBytes(romContents, 0)
 
 	return nil
-}
-
-func (m *MMU) Read(location uint16, length int) {
-
 }
 
 // ReadByte reads and returns a byte from memory at the given location.
@@ -71,4 +61,12 @@ func (m *MMU) ReadByte(location uint16) byte {
 // ReadWord reads and returns a word from memory at the given location.
 func (m *MMU) ReadWord(location uint16) uint16 {
 	return binary.LittleEndian.Uint16(m.memory[location : location+2])
+}
+
+// WriteBytes write bytes into memory at the given location.
+func (m *MMU) WriteBytes(content []byte, location uint16) {
+	for _, b := range content {
+		m.memory[location] = b
+		location++
+	}
 }
