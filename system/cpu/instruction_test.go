@@ -14,12 +14,31 @@ func mockCPU() *CPU {
 	return c
 }
 
+func Test0x21(t *testing.T) {
+	c := mockCPU()
+	c.mmu.WriteBytes([]byte{0x21, 0xFE, 0xFF}, 0)
+
+	c.Step()
+	testhelpers.AssertWord(t, 0xFFFE, c.registers.HL.word())
+}
+
 func Test0x31(t *testing.T) {
 	c := mockCPU()
 	c.mmu.WriteBytes([]byte{0x31, 0xFE, 0xFF}, 0)
 
 	c.Step()
 	testhelpers.AssertWord(t, 0xFFFE, c.stackPointer)
+}
+
+func Test0x32(t *testing.T) {
+	c := mockCPU()
+	c.registers.AF.setWord(0x0000)
+	c.registers.HL.setWord(0x9FFF)
+	c.mmu.WriteBytes([]byte{0x32}, 0)
+
+	c.Step()
+
+	testhelpers.AssertWord(t, 0x9FFE, c.registers.HL.word())
 }
 
 func Test0xAF(t *testing.T) {

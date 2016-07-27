@@ -45,6 +45,8 @@ func (i *instruction) Debug() map[string]interface{} {
 
 var baseInstructions = map[byte]*instruction{
 	0x00: &instruction{0x00, "NOP", 4, 1, false, func(c *CPU) {}},
+	0x21: &instruction{0x21, "LD HL,d16", 12, 3, false, func(c *CPU) { c.registers.HL.setWord(c.operandWord()) }},
 	0x31: &instruction{0x31, "LD SP,d16", 12, 3, false, func(c *CPU) { c.stackPointer = c.operandWord() }},
+	0x32: &instruction{0x32, "LD (HL-),A", 8, 1, false, func(c *CPU) { c.ldIntoMemAndDec(&c.registers.HL, c.registers.AF.low) }},
 	0xAF: &instruction{0xAF, "XOR A", 4, 1, false, func(c *CPU) { xorRegister(&c.registers.AF.low, c.registers.AF.low) }},
 }

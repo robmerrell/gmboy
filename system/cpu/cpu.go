@@ -134,6 +134,15 @@ func (c *CPU) operandWord() uint16 {
 	return c.mmu.ReadWord(c.programCounter + 1)
 }
 
+// xorRegister xor's a source and operand register and saves it in the source register
 func xorRegister(sourceRegister *byte, operandRegister byte) {
 	*sourceRegister ^= operandRegister
+}
+
+// ldIntoMemAndDec loads the value of the copyRegister into the memory address stored in the ldRegister
+// and then decrements the value stored in ldRegister
+func (c *CPU) ldIntoMemAndDec(ldRegister *register, copyRegister byte) {
+	address := ldRegister.word()
+	c.mmu.WriteBytes([]byte{copyRegister}, address)
+	ldRegister.setWord(ldRegister.word() - 1)
 }
