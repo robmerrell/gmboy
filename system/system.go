@@ -2,6 +2,7 @@ package system
 
 import (
 	"github.com/robmerrell/gmboy/system/cpu"
+	"github.com/robmerrell/gmboy/system/debugger"
 	"github.com/robmerrell/gmboy/system/mmu"
 )
 
@@ -38,4 +39,17 @@ func (s *System) Run() {
 	for {
 		s.cpu.Step()
 	}
+}
+
+// StartDebugger creates a new debugger and then attaches it to all of the relevant subsystems.
+func (s *System) StartDebugger(file string) error {
+	dbg := debugger.NewDebugger()
+	err := dbg.LoadSourceFile(file)
+	if err != nil {
+		return err
+	}
+
+	s.cpu.AttachDebugger(dbg)
+	s.mmu.AttachDebugger(dbg)
+	return nil
 }

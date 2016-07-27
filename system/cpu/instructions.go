@@ -1,6 +1,14 @@
 package cpu
 
+import (
+	"fmt"
+)
+
 type instruction struct {
+	// The machine form of the instruction. This will be duplicated in the map key below, but is useful here
+	// for the debugger.
+	opcode byte
+
 	// The human readable form of the instruction. Great for debugging and inspecting things.
 	mnemonic string
 
@@ -23,10 +31,20 @@ type instruction struct {
 	fn func(*CPU)
 }
 
+func (i *instruction) Debug() map[string]interface{} {
+	return map[string]interface{}{
+		"opcode":    i.opcode,
+		"opcodeHex": fmt.Sprintf("0x%2x", i.opcode),
+		"mnemonic":  i.mnemonic,
+		"cycles":    i.cycles,
+		"len":       i.len,
+	}
+}
+
 // I'm going off of this list for the info about the opcodes including the mnemonic: http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
 
 var baseInstructions = map[byte]*instruction{
-	0x00: &instruction{"NOP", 4, 1, false, func(c *CPU) {}},
-	0x31: &instruction{"LD SP,d16", 12, 3, false, func(c *CPU) { c.stackPointer = c.operandWord() }},
-	0xAF: &instruction{"XOR A", 4, 1, false, func(c *CPU) { xorRegister(&c.registers.AF.low, c.registers.AF.low) }},
+	0x00: &instruction{0x00, "NOP", 4, 1, false, func(c *CPU) {}},
+	0x31: &instruction{0x31, "LD SP,d16", 12, 3, false, func(c *CPU) { c.stackPointer = c.operandWord() }},
+	0xAF: &instruction{0xAF, "XOR A", 4, 1, false, func(c *CPU) { xorRegister(&c.registers.AF.low, c.registers.AF.low) }},
 }

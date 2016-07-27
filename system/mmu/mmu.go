@@ -3,7 +3,10 @@ package mmu
 import (
 	"encoding/binary"
 	"errors"
+	"github.com/robertkrimen/otto"
+	"github.com/robmerrell/gmboy/system/debugger"
 	"io/ioutil"
+	"log"
 )
 
 /*
@@ -28,12 +31,34 @@ const memorySize = 0xFFFF
 // MMU is the memory management unit for gmboy. The gameboy hardware doesn't have an MMU
 // but we're creating one here to make accessing memory easier to deal with.
 type MMU struct {
-	memory []byte
+	memory   []byte
+	debugger *debugger.Debugger
 }
 
 // NewMMU creates a new MMU to manage loading, accessing and changing values in memory.
 func NewMMU() *MMU {
 	return &MMU{memory: make([]byte, memorySize)}
+}
+
+// AttachDebugger attaches a javascript debugger to the MMU
+func (m *MMU) AttachDebugger(dbg *debugger.Debugger) {
+	log.Println("Attaching debugger to MMU")
+	m.debugger = dbg
+
+	// create the dumpMemory() function for the js debugger that returns the entire set of working memory
+	m.debugger.AttachFunction("dumpMemory", func(call otto.FunctionCall) otto.Value {
+		val, _ := call.Otto.ToValue(m.memory)
+		return val
+	})
+
+	// create the writeByte(location, byte) function for the js debugger that writes into memory
+	m.debugger.AttachFunction("writeByte", func(call otto.FunctionCall) otto.Value {
+		location, _ := call.Argument(0).ToInteger()
+		contents, _ := call.Argument(1).ToInteger()
+
+		m.memory[location] = byte(contents)
+		return otto.Value{}
+	})
 }
 
 // LoadBootRom loads the given bootrom file into memory. When the system boots the bootrom is

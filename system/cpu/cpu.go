@@ -2,6 +2,8 @@ package cpu
 
 import (
 	"encoding/binary"
+	"github.com/robertkrimen/otto"
+	"github.com/robmerrell/gmboy/system/debugger"
 	"github.com/robmerrell/gmboy/system/mmu"
 	"log"
 )
@@ -47,11 +49,48 @@ type CPU struct {
 
 	// reference to the MMU
 	mmu *mmu.MMU
+
+	// debugger
+	debugger       *debugger.Debugger
+	debuggerActive bool
 }
 
 // NewCPU returns a new CPU instance
 func NewCPU(memoryManager *mmu.MMU) *CPU {
 	return &CPU{registers: &registers{}, mmu: memoryManager}
+}
+
+// AttachDebugger attaches a javascript debugger to the CPU
+func (c *CPU) AttachDebugger(dbg *debugger.Debugger) {
+	log.Println("Attaching debugger to CPU")
+	c.debugger = dbg
+	c.debuggerActive = true
+
+	// create the cpuState() function for the js debugger that returns the current state of the CPU
+	c.debugger.AttachFunction("cpuState", func(call otto.FunctionCall) otto.Value {
+		registers := map[string]interface{}{
+			"stackPointer":   c.stackPointer,
+			"programCounter": c.programCounter,
+			"registers": map[string]byte{
+				"A": c.registers.AF.low,
+				"B": c.registers.BC.low,
+				"C": c.registers.BC.high,
+				"D": c.registers.DE.low,
+				"E": c.registers.DE.high,
+				"F": c.registers.AF.high,
+				"H": c.registers.HL.low,
+				"L": c.registers.HL.high,
+			},
+			"registerPairs": map[string]uint16{
+				"AF": c.registers.AF.word(),
+				"BC": c.registers.BC.word(),
+				"DE": c.registers.DE.word(),
+				"HL": c.registers.HL.word(),
+			},
+		}
+		val, _ := call.Otto.ToValue(registers)
+		return val
+	})
 }
 
 // InitWithBoot initializes the CPU assuming we are executing the bootrom. The only absolute known of
@@ -67,8 +106,14 @@ func (c *CPU) Step() {
 	opcode := c.mmu.ReadByte(c.programCounter)
 	instruction, exists := baseInstructions[opcode]
 	if !exists {
-		log.Printf("Opcode not yet implemented: 0x%2x\n", opcode)
+		if c.debuggerActive {
+			c.debugger.RunCallbacks("unimplemented_opcode", opcode)
+		}
 		return
+	}
+
+	if c.debuggerActive {
+		c.debugger.RunCallbacks("before_execute", instruction.Debug())
 	}
 
 	// execute the instruction
@@ -77,6 +122,10 @@ func (c *CPU) Step() {
 	// advance the program counter
 	if !instruction.changesProgramCounter {
 		c.programCounter += instruction.len
+	}
+
+	if c.debuggerActive {
+		c.debugger.RunCallbacks("after_execute", instruction.Debug())
 	}
 }
 

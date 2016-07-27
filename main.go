@@ -12,6 +12,8 @@ func main() {
 		panic(err)
 	}
 
+	sys.StartDebugger("./debug.js")
+
 	sys.LoadRom("~/tmp/tetris.gb")
 	sys.Run()
 }
