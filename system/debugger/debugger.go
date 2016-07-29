@@ -97,7 +97,7 @@ ppInstruction = function(inst) {
     return '0x'+i.toString(16);
   }).join(' ');
 
-  console.log('(' + inst.opcodeHex + ') ' + inst.mnemonic + ' operands: ' + operands);
+  console.log(inst.opcodeHex + ': ' + inst.mnemonic + '    operands: ' + operands);
 };
 
 padHex = function(value, mask) {
@@ -120,7 +120,8 @@ ppCPU = function() {
         'AF:' + padHex(state.registerPairs.AF, '0000') + '  ' +
         'BC:' + padHex(state.registerPairs.BC, '0000') + '  ' +
         'DE:' + padHex(state.registerPairs.DE, '0000') + '  ' +
-        'HL:' + padHex(state.registerPairs.HL, '0000');
+        'HL:' + padHex(state.registerPairs.HL, '0000') + '  ' +
+        'flags:' + state.flags;
 
   console.log(output);
 };
@@ -134,6 +135,7 @@ ppSystem = function() {
 
   console.log('  program counter: ' + state.programCounter.toString(16));
   console.log('  stack pointer:   ' + state.stackPointer.toString(16));
+  console.log('  flags:           ' + state.flags);
 
   var keys = Object.keys(state.registerPairs).sort();
   for (var i in keys) {

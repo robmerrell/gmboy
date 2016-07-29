@@ -6,6 +6,7 @@ import (
 	"github.com/robmerrell/gmboy/system/debugger"
 	"github.com/robmerrell/gmboy/system/mmu"
 	"log"
+	"strings"
 )
 
 // These represent the flags for the flag register (register F). Some CPU operations will set or unset these
@@ -60,6 +61,31 @@ func (r *registers) setFlag(flag byte) {
 	r.AF.high |= flag
 }
 
+// flagToString returns the flags in an easy to read format where the flags occupy one of
+// four spaces in the string: ZNHC. If a flag is set, it's letter will be present, if not
+// it will be zero.
+func (r *registers) flagToString() string {
+	flagStates := []string{"-", "-", "-", "-"}
+
+	if *r.flag()&flagC != 0 {
+		flagStates[3] = "C"
+	}
+
+	if *r.flag()&flagH != 0 {
+		flagStates[2] = "H"
+	}
+
+	if *r.flag()&flagN != 0 {
+		flagStates[1] = "N"
+	}
+
+	if *r.flag()&flagZ != 0 {
+		flagStates[0] = "Z"
+	}
+
+	return strings.Join(flagStates, "")
+}
+
 // CPU holds the current state of the CPU
 type CPU struct {
 	// registers are all of the working CPU registers
@@ -111,6 +137,7 @@ func (c *CPU) AttachDebugger(dbg *debugger.Debugger) {
 				"DE": c.registers.DE.word(),
 				"HL": c.registers.HL.word(),
 			},
+			"flags": c.registers.flagToString(),
 		}
 		val, _ := call.Otto.ToValue(registers)
 		return val
