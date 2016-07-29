@@ -14,6 +14,54 @@ func mockCPU() *CPU {
 	return c
 }
 
+func assertSetFlags(t *testing.T, flagRegister byte, bitmask byte) {
+	checkFlag := func(flag byte) {
+		if flagRegister&flag == 0 {
+			t.Errorf("Expected the flag %08b to be set, but it was not", flag)
+		}
+	}
+
+	if bitmask&flagC != 0 {
+		checkFlag(flagC)
+	}
+
+	if bitmask&flagH != 0 {
+		checkFlag(flagH)
+	}
+
+	if bitmask&flagN != 0 {
+		checkFlag(flagN)
+	}
+
+	if bitmask&flagZ != 0 {
+		checkFlag(flagZ)
+	}
+}
+
+func assertUnsetFlags(t *testing.T, flagRegister byte, bitmask byte) {
+	checkFlag := func(flag byte) {
+		if flagRegister&flag != 0 {
+			t.Errorf("Expected the flag %08b to be reset, but it had a value", flag)
+		}
+	}
+
+	if bitmask&flagC != 0 {
+		checkFlag(flagC)
+	}
+
+	if bitmask&flagH != 0 {
+		checkFlag(flagH)
+	}
+
+	if bitmask&flagN != 0 {
+		checkFlag(flagN)
+	}
+
+	if bitmask&flagZ != 0 {
+		checkFlag(flagZ)
+	}
+}
+
 func Test0x21(t *testing.T) {
 	c := mockCPU()
 	c.mmu.WriteBytes([]byte{0x21, 0xFE, 0xFF}, 0)
@@ -48,4 +96,6 @@ func Test0xAF(t *testing.T) {
 
 	c.Step()
 	testhelpers.AssertByte(t, 0x00, c.registers.AF.low)
+	assertSetFlags(t, *c.registers.flag(), flagZ)
+	assertUnsetFlags(t, *c.registers.flag(), flagC|flagH|flagN)
 }

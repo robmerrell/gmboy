@@ -8,6 +8,15 @@ import (
 	"log"
 )
 
+// These represent the flags for the flag register (register F). Some CPU operations will set or unset these
+// flags on the flag register. And some will act differently when these flags are set.
+const (
+	flagC byte = 1 << 4
+	flagH      = 1 << 5
+	flagN      = 1 << 6
+	flagZ      = 1 << 7
+)
+
 // register store the state of a register pair. The gameboy has 8 8-bit registers: A, B, C, D, E, F, H and L
 // these registers are often accessed in 16-bit pairs (AF, BC, DE, HL). So by default we represent them as 16-bit
 // pairs and if we need to access just a single 8-bit register we do so by accessing either the high or low byte of
@@ -34,6 +43,21 @@ type registers struct {
 	BC register
 	DE register
 	HL register
+}
+
+// flag is just a shortcut to get to the F register
+func (r *registers) flag() *byte {
+	return &r.AF.high
+}
+
+// resetFlag resets the given flag on the Flag register (F)
+func (r *registers) resetFlag(flag byte) {
+	r.AF.high &^= flag
+}
+
+//setFlag sets the given flag on the Flag register (F)
+func (r *registers) setFlag(flag byte) {
+	r.AF.high |= flag
 }
 
 // CPU holds the current state of the CPU
@@ -134,9 +158,21 @@ func (c *CPU) operandWord() uint16 {
 	return c.mmu.ReadWord(c.programCounter + 1)
 }
 
-// xorRegister xor's a source and operand register and saves it in the source register
-func xorRegister(sourceRegister *byte, operandRegister byte) {
-	*sourceRegister ^= operandRegister
+// xorRegisters XOR's a source and operand register and saves it in the source register. C,H,N flags are reset
+// and the Z flag is set to 0 if the XOR results in a 0.
+func (c *CPU) xorRegisters(sourceRegister *byte, operandRegister byte) {
+	res := *sourceRegister ^ operandRegister
+
+	c.registers.resetFlag(flagC)
+	c.registers.resetFlag(flagH)
+	c.registers.resetFlag(flagN)
+	c.registers.resetFlag(flagZ)
+
+	if res == 0 {
+		c.registers.setFlag(flagZ)
+	}
+
+	*sourceRegister = res
 }
 
 // ldIntoMemAndDec loads the value of the copyRegister into the memory address stored in the ldRegister
