@@ -57,3 +57,17 @@ func Test0xAF(t *testing.T) {
 	testhelpers.AssertByte(t, 0x00, c.registers.AF.low)
 	assertFlagState(t, "Z---", c.registers.flagToString())
 }
+
+func Test0xCB7C(t *testing.T) {
+	c := mockCPU()
+	c.registers.HL.setWord(0xFFFF)
+	c.mmu.WriteBytes([]byte{0xCB, 0x7C}, 0)
+	c.Step()
+	assertFlagState(t, "--H-", c.registers.flagToString())
+
+	c = mockCPU()
+	c.registers.HL.setWord(0x0000)
+	c.mmu.WriteBytes([]byte{0xCB, 0x7C}, 0)
+	c.Step()
+	assertFlagState(t, "Z-H-", c.registers.flagToString())
+}

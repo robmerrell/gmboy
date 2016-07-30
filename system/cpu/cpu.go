@@ -155,7 +155,20 @@ func (c *CPU) InitWithBoot() {
 func (c *CPU) Step() {
 	// get the instruction of the opcode
 	opcode := c.mmu.ReadByte(c.programCounter)
-	instruction, exists := baseInstructions[opcode]
+
+	var inst *instruction
+	var exists bool
+	if opcode == 0xCB { // extended instruction
+		// since the extended opcode follows the 0xCB opcode increment the programCounter and read again
+		c.programCounter++
+		opcode = c.mmu.ReadByte(c.programCounter)
+
+		inst, exists = extendedInstructions[opcode]
+	} else {
+		inst, exists = baseInstructions[opcode]
+	}
+
+	// instruction, exists := baseInstructions[opcode]
 	if !exists {
 		if c.debuggerActive {
 			c.debugger.RunCallbacks("unimplemented_opcode", opcode)
@@ -164,19 +177,19 @@ func (c *CPU) Step() {
 	}
 
 	if c.debuggerActive {
-		c.debugger.RunCallbacks("before_execute", instruction.Debug())
+		c.debugger.RunCallbacks("before_execute", inst.Debug())
 	}
 
 	// execute the instruction
-	instruction.fn(c)
+	inst.fn(c)
 
 	// advance the program counter
-	if !instruction.changesProgramCounter {
-		c.programCounter += instruction.len
+	if !inst.changesProgramCounter {
+		c.programCounter += inst.len
 	}
 
 	if c.debuggerActive {
-		c.debugger.RunCallbacks("after_execute", instruction.Debug())
+		c.debugger.RunCallbacks("after_execute", inst.Debug())
 	}
 }
 
@@ -208,4 +221,16 @@ func (c *CPU) ldIntoMemAndDec(ldRegister *register, copyRegister byte) {
 	address := ldRegister.word()
 	c.mmu.WriteBytes([]byte{copyRegister}, address)
 	ldRegister.setWord(ldRegister.word() - 1)
+}
+
+// testRegisterBit tests the bit in the register and sets the Z flag if that bit is 0
+func (c *CPU) testRegisterBit(register byte, bitNum byte) {
+	if register&(1<<bitNum) != 0 { // bit is set
+		c.registers.resetFlag(flagZ)
+	} else { // bit is not set
+		c.registers.setFlag(flagZ)
+	}
+
+	c.registers.resetFlag(flagN)
+	c.registers.setFlag(flagH)
 }

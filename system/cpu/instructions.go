@@ -50,3 +50,7 @@ var baseInstructions = map[byte]*instruction{
 	0x32: &instruction{0x32, "LD (HL-),A", 8, 1, false, func(c *CPU) { c.ldIntoMemAndDec(&c.registers.HL, c.registers.AF.low) }},
 	0xAF: &instruction{0xAF, "XOR A", 4, 1, false, func(c *CPU) { c.xorRegisters(&c.registers.AF.low, c.registers.AF.low) }},
 }
+
+var extendedInstructions = map[byte]*instruction{
+	0x7c: &instruction{0x7C, "BIT 7,H", 8, 2, false, func(c *CPU) { c.testRegisterBit(c.registers.HL.low, 7) }},
+}

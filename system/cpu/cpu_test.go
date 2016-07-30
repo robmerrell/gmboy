@@ -42,7 +42,6 @@ func TestRegistersFlagSettingAndUnsetting(t *testing.T) {
 	}
 
 	// test unsetting the flags
-
 	r.resetFlag(flagC)
 
 	if *r.flag()&flagC != 0 {
