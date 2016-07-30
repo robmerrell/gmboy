@@ -43,14 +43,22 @@ func (i *instruction) Debug() map[string]interface{} {
 
 // I'm going off of this list for the info about the opcodes including the mnemonic: http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
 
+// if *c.registers.flag()&flagZ == 0 {
 var baseInstructions = map[byte]*instruction{
 	0x00: &instruction{0x00, "NOP", 4, 1, false, func(c *CPU) {}},
+	// TODO: I'm not entirely sure how to handle cycles for these jump calls. It looks like they can vary in some way...
+	0x20: &instruction{0x20, "JR NZ,r8", 8, 2, true, func(c *CPU) {
+		cond := *c.registers.flag()&flagZ == 0 // Z flag is unset
+		c.jumpOnCondition(c.operandByte(), cond)
+	}},
 	0x21: &instruction{0x21, "LD HL,d16", 12, 3, false, func(c *CPU) { c.registers.HL.setWord(c.operandWord()) }},
 	0x31: &instruction{0x31, "LD SP,d16", 12, 3, false, func(c *CPU) { c.stackPointer = c.operandWord() }},
 	0x32: &instruction{0x32, "LD (HL-),A", 8, 1, false, func(c *CPU) { c.ldIntoMemAndDec(&c.registers.HL, c.registers.AF.low) }},
 	0xAF: &instruction{0xAF, "XOR A", 4, 1, false, func(c *CPU) { c.xorRegisters(&c.registers.AF.low, c.registers.AF.low) }},
 }
 
+// The instruction length for thee extended instructions is going to be what is in the above link-1. I believe that in the link above when they
+// say the instruction length is 2 it's because they are counting botht he 0xCB + the instruction.
 var extendedInstructions = map[byte]*instruction{
-	0x7c: &instruction{0x7C, "BIT 7,H", 8, 2, false, func(c *CPU) { c.testRegisterBit(c.registers.HL.low, 7) }},
+	0x7c: &instruction{0x7C, "BIT 7,H", 8, 1, false, func(c *CPU) { c.testRegisterBit(c.registers.HL.low, 7) }},
 }

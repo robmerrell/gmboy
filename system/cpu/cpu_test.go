@@ -48,3 +48,17 @@ func TestRegistersFlagSettingAndUnsetting(t *testing.T) {
 		t.Error("Expected C flag to not be set, but it was")
 	}
 }
+
+func TestJumpOnCondition(t *testing.T) {
+	// if a condition is true a jump should happen
+	c := mockCPU()
+	c.programCounter = 0x000A
+	c.jumpOnCondition(0xFB, true)
+	testhelpers.AssertWord(t, 0x0007, c.programCounter)
+
+	// if a condition is false a jump shouldn't not happen and the pc should just be incremented
+	c = mockCPU()
+	c.programCounter = 0x000A
+	c.jumpOnCondition(0xFB, false)
+	testhelpers.AssertWord(t, 0x000C, c.programCounter)
+}

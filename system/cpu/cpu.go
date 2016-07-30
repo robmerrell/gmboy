@@ -193,6 +193,11 @@ func (c *CPU) Step() {
 	}
 }
 
+// operandByte reads and returns the current instructions operand as a byte
+func (c *CPU) operandByte() byte {
+	return c.mmu.ReadByte(c.programCounter + 1)
+}
+
 // operandWord reads and returns the current instructions operands as a word
 func (c *CPU) operandWord() uint16 {
 	return c.mmu.ReadWord(c.programCounter + 1)
@@ -233,4 +238,16 @@ func (c *CPU) testRegisterBit(register byte, bitNum byte) {
 
 	c.registers.resetFlag(flagN)
 	c.registers.setFlag(flagH)
+}
+
+// jumpOnCondition will jump if the condition is true and continue if not
+func (c *CPU) jumpOnCondition(offset byte, condition bool) {
+	// The jump assumes the program counter has alredy been incremented. And if no jump needs to happen
+	// this needs to be incremented anyway to move onto the next instruction.
+	c.programCounter += 2
+
+	if condition {
+		signedOffset := int8(offset)
+		c.programCounter += uint16(signedOffset)
+	}
 }
