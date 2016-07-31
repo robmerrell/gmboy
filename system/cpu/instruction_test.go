@@ -21,6 +21,14 @@ func assertFlagState(t *testing.T, expectedFlagString string, actualFlagString s
 	}
 }
 
+func Test0x0E(t *testing.T) {
+	c := mockCPU()
+	c.mmu.WriteBytes([]byte{0x0E, 0x04}, 0)
+	c.Step()
+
+	testhelpers.AssertByte(t, 0x04, c.registers.BC.high)
+}
+
 func Test0x20(t *testing.T) {
 	c := mockCPU()
 	c.programCounter = 0x0000

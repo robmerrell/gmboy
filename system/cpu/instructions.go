@@ -43,9 +43,9 @@ func (i *instruction) Debug() map[string]interface{} {
 
 // I'm going off of this list for the info about the opcodes including the mnemonic: http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
 
-// if *c.registers.flag()&flagZ == 0 {
 var baseInstructions = map[byte]*instruction{
 	0x00: &instruction{0x00, "NOP", 4, 1, false, func(c *CPU) {}},
+	0x0E: &instruction{0x0E, "LD C,d8", 8, 2, false, func(c *CPU) { c.registers.BC.high = c.operandByte() }},
 	// TODO: I'm not entirely sure how to handle cycles for these jump calls. It looks like they can vary in some way...
 	0x20: &instruction{0x20, "JR NZ,r8", 8, 2, true, func(c *CPU) {
 		cond := *c.registers.flag()&flagZ == 0 // Z flag is unset
