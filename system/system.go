@@ -3,20 +3,33 @@ package system
 import (
 	"github.com/robmerrell/gmboy/system/cpu"
 	"github.com/robmerrell/gmboy/system/debugger"
+	"github.com/robmerrell/gmboy/system/display"
 	"github.com/robmerrell/gmboy/system/mmu"
+)
+
+const (
+	displayWidth  = 160
+	displayHeight = 144
 )
 
 // System represents the Gameboy system as a whole
 type System struct {
-	cpu *cpu.CPU
-	mmu *mmu.MMU
+	cpu     *cpu.CPU
+	mmu     *mmu.MMU
+	display *display.Display
 }
 
 // NewSystem creates a new Gameboy system
-func NewSystem() *System {
+func NewSystem() (*System, error) {
 	m := mmu.NewMMU()
 	c := cpu.NewCPU(m)
-	return &System{cpu: c, mmu: m}
+
+	d, err := display.NewDisplay(displayWidth, displayHeight, 1)
+	if err != nil {
+		return &System{}, err
+	}
+
+	return &System{cpu: c, mmu: m, display: d}, nil
 }
 
 // PerformBootstrap runs the given bootstrap rom on startup. I'm unclear on copyright issues with this, so
@@ -38,6 +51,7 @@ func (s *System) LoadRom(romFile string) {
 func (s *System) Run() {
 	for {
 		s.cpu.Step()
+		s.display.PollOSEvents()
 	}
 }
 

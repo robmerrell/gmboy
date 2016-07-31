@@ -4,7 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"github.com/robmerrell/gmboy/system"
+	"runtime"
 )
+
+func init() {
+	runtime.LockOSThread()
+}
 
 func main() {
 	debug := flag.String("debug", "", "")
@@ -18,7 +23,10 @@ func main() {
 		return
 	}
 
-	sys := system.NewSystem()
+	sys, err := system.NewSystem()
+	if err != nil {
+		panic(err)
+	}
 
 	if *bootstrap != "" {
 		err := sys.PerformBootstrap(*bootstrap)
