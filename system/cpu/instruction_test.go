@@ -66,6 +66,14 @@ func Test0x32(t *testing.T) {
 	testhelpers.AssertWord(t, 0x9FFE, c.registers.HL.word())
 }
 
+func Test0x3E(t *testing.T) {
+	c := mockCPU()
+	c.mmu.WriteBytes([]byte{0x3E, 0x04}, 0)
+	c.Step()
+
+	testhelpers.AssertByte(t, 0x04, c.registers.AF.low)
+}
+
 func Test0xAF(t *testing.T) {
 	c := mockCPU()
 	c.registers.AF.setWord(0xFFFE)
