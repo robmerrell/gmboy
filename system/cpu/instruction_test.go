@@ -86,11 +86,12 @@ func Test0xAF(t *testing.T) {
 
 func Test0xE2(t *testing.T) {
 	c := mockCPU()
+	c.registers.AF.setWord(0x800a)
 	c.registers.BC.setWord(0x0011)
-	c.mmu.WriteBytes([]byte{0xE2, 0x0C}, 0)
+	c.mmu.WriteBytes([]byte{0xE2}, 0)
 
 	c.Step()
-	testhelpers.AssertByte(t, 0x0C, c.mmu.ReadByte(0xFF11))
+	testhelpers.AssertByte(t, c.registers.AF.low, c.mmu.ReadByte(0xFF11))
 }
 
 func Test0xCB7C(t *testing.T) {
