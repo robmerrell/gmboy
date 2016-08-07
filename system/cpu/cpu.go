@@ -168,7 +168,6 @@ func (c *CPU) Step() {
 		inst, exists = baseInstructions[opcode]
 	}
 
-	// instruction, exists := baseInstructions[opcode]
 	if !exists {
 		if c.debuggerActive {
 			c.debugger.RunCallbacks("unimplemented_opcode", opcode)

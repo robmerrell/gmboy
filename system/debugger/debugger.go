@@ -27,6 +27,15 @@ type Debugger struct {
 	vm                *otto.Otto
 	stopOnInstruction bool
 	callbacks         map[string][]otto.Value
+
+	// Flag for when we are actively stepping from a breakpoint
+	BreakpointActive bool
+
+	// Step is what we use to coordinate stepping through execution with the CPU when a breakpoint is encountered.
+	Step chan bool
+
+	// Cont signals that execution should continue and the breakpoint be removed.
+	Cont chan bool
 }
 
 // NewDebugger returns a new debugger instance.
@@ -34,6 +43,8 @@ func NewDebugger() *Debugger {
 	d := &Debugger{
 		vm:        otto.New(),
 		callbacks: make(map[string][]otto.Value),
+		Step:      make(chan bool, 1),
+		Cont:      make(chan bool, 1),
 	}
 
 	// Make the "on" function available to the js vm
@@ -84,6 +95,20 @@ func (d *Debugger) RunCallbacks(name string, arg interface{}) {
 			val, _ := callback.ToString()
 			log.Println("Expected a function for the callback, but got", val)
 		}
+	}
+}
+
+// Next sends a message to the system that we are ready to move to the next statement
+func (d *Debugger) Next() {
+	if d.BreakpointActive {
+		d.Step <- true
+	}
+}
+
+// Continue sends a message to the system that we are ready to remove the breakpoint and continue execution.
+func (d *Debugger) Continue() {
+	if d.BreakpointActive {
+		d.Cont <- true
 	}
 }
 
