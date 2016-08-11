@@ -21,6 +21,16 @@ func assertFlagState(t *testing.T, expectedFlagString string, actualFlagString s
 	}
 }
 
+func Test0x0C(t *testing.T) {
+	c := mockCPU()
+	c.registers.BC.high = 0xF
+	c.mmu.WriteBytes([]byte{0x0C}, 0)
+	c.Step()
+
+	testhelpers.AssertByte(t, 0x10, c.registers.BC.high)
+	assertFlagState(t, "--H-", c.registers.flagToString())
+}
+
 func Test0x0E(t *testing.T) {
 	c := mockCPU()
 	c.mmu.WriteBytes([]byte{0x0E, 0x04}, 0)
@@ -57,13 +67,14 @@ func Test0x31(t *testing.T) {
 
 func Test0x32(t *testing.T) {
 	c := mockCPU()
-	c.registers.AF.setWord(0x0000)
+	c.registers.AF.setWord(0x1132)
 	c.registers.HL.setWord(0x9FFF)
 	c.mmu.WriteBytes([]byte{0x32}, 0)
 
 	c.Step()
 
 	testhelpers.AssertWord(t, 0x9FFE, c.registers.HL.word())
+	testhelpers.AssertByte(t, 0x11, c.mmu.ReadByte(c.registers.HL.word()+1))
 }
 
 func Test0x3E(t *testing.T) {
@@ -72,6 +83,17 @@ func Test0x3E(t *testing.T) {
 	c.Step()
 
 	testhelpers.AssertByte(t, 0x04, c.registers.AF.low)
+}
+
+func Test0x77(t *testing.T) {
+	c := mockCPU()
+	c.registers.AF.setWord(0x1132)
+	c.registers.HL.setWord(0x9FFF)
+	c.mmu.WriteBytes([]byte{0x77}, 0)
+
+	c.Step()
+
+	testhelpers.AssertByte(t, 0x11, c.mmu.ReadByte(c.registers.HL.word()))
 }
 
 func Test0xAF(t *testing.T) {

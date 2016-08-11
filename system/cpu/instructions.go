@@ -16,7 +16,7 @@ type instruction struct {
 	// take 8 cycles, while 16-bit register loads take 12 cycles.
 	cycles int
 
-	// The length the operands for the instruction. Some instructions require more bytes for their parameters
+	// The length the operands + instruction. Some instructions require more bytes for their parameters
 	// than others. For example compare NoOp (0x00) with loading a value in the stack pointer (0x31). The
 	// NoOp instruction takes 0 operands and so the entire instruction consumes 1 byte, just for the instruction itself.
 	// On the other hand loading a 16-bit word into the stack pointer requires space for the instruction (0x31), plus
@@ -45,6 +45,7 @@ func (i *instruction) Debug() map[string]interface{} {
 
 var baseInstructions = map[byte]*instruction{
 	0x00: &instruction{0x00, "NOP", 4, 1, false, func(c *CPU) {}},
+	0x0C: &instruction{0x0C, "INC C", 4, 1, false, func(c *CPU) { c.incrementRegister(&c.registers.BC.high) }},
 	0x0E: &instruction{0x0E, "LD C,d8", 8, 2, false, func(c *CPU) { c.registers.BC.high = c.operandByte() }},
 	// TODO: I'm not entirely sure how to handle cycles for these jump calls. It looks like they can vary in some way...
 	0x20: &instruction{0x20, "JR NZ,r8", 8, 2, true, func(c *CPU) {
@@ -53,14 +54,15 @@ var baseInstructions = map[byte]*instruction{
 	}},
 	0x21: &instruction{0x21, "LD HL,d16", 12, 3, false, func(c *CPU) { c.registers.HL.setWord(c.operandWord()) }},
 	0x31: &instruction{0x31, "LD SP,d16", 12, 3, false, func(c *CPU) { c.stackPointer = c.operandWord() }},
-	0x32: &instruction{0x32, "LD (HL-),A", 8, 1, false, func(c *CPU) { c.ldIntoMemAndDec(&c.registers.HL, c.registers.AF.low) }},
+	0x32: &instruction{0x32, "LD (HL-),A", 8, 1, false, func(c *CPU) { c.ldIntoRegisterPairAddressAndDec(&c.registers.HL, c.registers.AF.low) }},
 	0x3E: &instruction{0x3E, "LD A,d8", 8, 2, false, func(c *CPU) { c.registers.AF.low = c.operandByte() }},
+	0x77: &instruction{0x77, "LD (HL),A", 8, 1, false, func(c *CPU) { c.ldIntoRegisterPairAddress(&c.registers.HL, c.registers.AF.low) }},
 	0xAF: &instruction{0xAF, "XOR A", 4, 1, false, func(c *CPU) { c.xorRegisters(&c.registers.AF.low, c.registers.AF.low) }},
 	0xE2: &instruction{0xE2, "LD A,(C)", 8, 1, false, func(c *CPU) { c.mmu.WriteBytes([]byte{c.registers.AF.low}, 0xFF00+uint16(c.registers.BC.high)) }},
 }
 
-// The instruction length for thee extended instructions is going to be what is in the above link-1. I believe that in the link above when they
-// say the instruction length is 2 it's because they are counting botht he 0xCB + the instruction.
+// The instruction length for the extended instructions is going to be what is in the above link-1. I believe that in the link above when they
+// say the instruction length is 2 it's because they are counting both the 0xCB byte + the instruction.
 var extendedInstructions = map[byte]*instruction{
 	0x7c: &instruction{0x7C, "BIT 7,H", 8, 1, false, func(c *CPU) { c.testRegisterBit(c.registers.HL.low, 7) }},
 }

@@ -26,27 +26,14 @@ func TestFlagRegisterIsF(t *testing.T) {
 
 func TestRegistersFlagSettingAndUnsetting(t *testing.T) {
 	r := &registers{}
+
 	r.setFlag(flagC)
 	r.setFlag(flagH)
-
-	if *r.flag()&flagC == 0 {
-		t.Error("Expected C flag to be set, but it wasn't")
-	}
-
-	if *r.flag()&flagH == 0 {
-		t.Error("Expected H flag to be set, but it wasn't")
-	}
-
-	if *r.flag()&flagZ != 0 {
-		t.Error("Expected Z flag to not be set, but it was")
-	}
+	assertFlagState(t, "--HC", r.flagToString())
 
 	// test unsetting the flags
 	r.resetFlag(flagC)
-
-	if *r.flag()&flagC != 0 {
-		t.Error("Expected C flag to not be set, but it was")
-	}
+	assertFlagState(t, "--H-", r.flagToString())
 }
 
 func TestJumpOnCondition(t *testing.T) {
@@ -61,4 +48,40 @@ func TestJumpOnCondition(t *testing.T) {
 	c.programCounter = 0x000A
 	c.jumpOnCondition(0xFB, false)
 	testhelpers.AssertWord(t, 0x000C, c.programCounter)
+}
+
+func TestIncrementRegister(t *testing.T) {
+	c := mockCPU()
+	c.registers.BC.low = 0xF
+	c.registers.BC.high = 0xFF
+	c.registers.DE.low = 0x01
+
+	c.incrementRegister(&c.registers.BC.low)
+	testhelpers.AssertByte(t, 0x10, c.registers.BC.low)
+	assertFlagState(t, "--H-", c.registers.flagToString())
+
+	c.incrementRegister(&c.registers.BC.high)
+	testhelpers.AssertByte(t, 0x0, c.registers.BC.high)
+	assertFlagState(t, "Z-H-", c.registers.flagToString())
+
+	c.incrementRegister(&c.registers.DE.low)
+	testhelpers.AssertByte(t, 0x02, c.registers.DE.low)
+	assertFlagState(t, "----", c.registers.flagToString())
+}
+
+func TestLdIntoMemAndDec(t *testing.T) {
+	c := mockCPU()
+	c.registers.HL.setWord(0x1132)
+	c.registers.BC.setWord(0x1030)
+	c.registers.AF.low = 35
+
+	c.ldIntoRegisterPairAddress(&c.registers.HL, c.registers.AF.low)
+	testhelpers.AssertByte(t, 35, c.mmu.ReadByte(c.registers.HL.word()))
+
+	prevPairValue := c.registers.BC.word()
+	c.ldIntoRegisterPairAddressAndDec(&c.registers.BC, c.registers.AF.low)
+	testhelpers.AssertByte(t, 35, c.mmu.ReadByte(prevPairValue))
+	if c.registers.BC.word() != prevPairValue-1 {
+		t.Error("Expected BC register pair to be decremented")
+	}
 }

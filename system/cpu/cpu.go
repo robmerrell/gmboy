@@ -202,6 +202,28 @@ func (c *CPU) operandWord() uint16 {
 	return c.mmu.ReadWord(c.programCounter + 1)
 }
 
+// incrementRegister increments the value in the register by 1 and sets flags
+func (c *CPU) incrementRegister(reg *byte) {
+	sum := *reg + 1
+
+	c.registers.resetFlag(flagN)
+
+	if sum == 0 {
+		c.registers.setFlag(flagZ)
+	} else {
+		c.registers.resetFlag(flagZ)
+	}
+
+	// half carry
+	if ((*reg&0xF)+(1&0xF))&0x10 == 0x10 {
+		c.registers.setFlag(flagH)
+	} else {
+		c.registers.resetFlag(flagH)
+	}
+
+	*reg = sum
+}
+
 // xorRegisters XOR's a source and operand register and saves it in the source register. C,H,N flags are reset
 // and the Z flag is set to 0 if the XOR results in a 0.
 func (c *CPU) xorRegisters(sourceRegister *byte, operandRegister byte) {
@@ -219,12 +241,17 @@ func (c *CPU) xorRegisters(sourceRegister *byte, operandRegister byte) {
 	*sourceRegister = res
 }
 
-// ldIntoMemAndDec loads the value of the copyRegister into the memory address stored in the ldRegister
-// and then decrements the value stored in ldRegister
-func (c *CPU) ldIntoMemAndDec(ldRegister *register, copyRegister byte) {
-	address := ldRegister.word()
-	c.mmu.WriteBytes([]byte{copyRegister}, address)
-	ldRegister.setWord(ldRegister.word() - 1)
+// ldIntoRegisterPairAddress loads the value of the valueRegister into the memory address pointed at by the locationRegister
+func (c *CPU) ldIntoRegisterPairAddress(locationRegister *register, valueRegister byte) {
+	address := locationRegister.word()
+	c.mmu.WriteBytes([]byte{valueRegister}, address)
+}
+
+// ldIntoRegisterPairAddressAndDec loads the value of the valueRegister into the memory address pointed at by the locationRegister
+// and then decrements the value stored in locationRegister
+func (c *CPU) ldIntoRegisterPairAddressAndDec(locationRegister *register, valueRegister byte) {
+	c.ldIntoRegisterPairAddress(locationRegister, valueRegister)
+	locationRegister.setWord(locationRegister.word() - 1)
 }
 
 // testRegisterBit tests the bit in the register and sets the Z flag if that bit is 0
