@@ -47,6 +47,7 @@ var baseInstructions = map[byte]*instruction{
 	0x00: &instruction{0x00, "NOP", 4, 1, false, func(c *CPU) {}},
 	0x0C: &instruction{0x0C, "INC C", 4, 1, false, func(c *CPU) { c.incrementRegister(&c.registers.BC.high) }},
 	0x0E: &instruction{0x0E, "LD C,d8", 8, 2, false, func(c *CPU) { c.registers.BC.high = c.operandByte() }},
+	0x11: &instruction{0x11, "LD DE,d16", 12, 3, false, func(c *CPU) { c.registers.DE.setWord(c.operandWord()) }},
 	// TODO: I'm not entirely sure how to handle cycles for these jump calls. It looks like they can vary in some way...
 	0x20: &instruction{0x20, "JR NZ,r8", 8, 2, true, func(c *CPU) {
 		cond := *c.registers.flag()&flagZ == 0 // Z flag is unset

@@ -39,6 +39,14 @@ func Test0x0E(t *testing.T) {
 	testhelpers.AssertByte(t, 0x04, c.registers.BC.high)
 }
 
+func Test0x11(t *testing.T) {
+	c := mockCPU()
+	c.mmu.WriteBytes([]byte{0x11, 0xFE, 0xFF}, 0)
+
+	c.Step()
+	testhelpers.AssertWord(t, 0xFFFE, c.registers.DE.word())
+}
+
 func Test0x20(t *testing.T) {
 	c := mockCPU()
 	c.programCounter = 0x0000
