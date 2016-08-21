@@ -106,6 +106,15 @@ func Test0xAF(t *testing.T) {
 	assertFlagState(t, "Z---", c.registers.flagToString())
 }
 
+func Test0xE0(t *testing.T) {
+	c := mockCPU()
+	c.registers.AF.setWord(0x1203)
+	c.mmu.WriteBytes([]byte{0xE0, 0x04}, 0)
+
+	c.Step()
+	testhelpers.AssertByte(t, c.registers.AF.low, c.mmu.ReadByte(0xFF04))
+}
+
 func Test0xE2(t *testing.T) {
 	c := mockCPU()
 	c.registers.AF.setWord(0x800a)

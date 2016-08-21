@@ -58,6 +58,7 @@ var baseInstructions = map[byte]*instruction{
 	0x3E: &instruction{0x3E, "LD A,d8", 8, 2, false, func(c *CPU) { c.registers.AF.low = c.operandByte() }},
 	0x77: &instruction{0x77, "LD (HL),A", 8, 1, false, func(c *CPU) { c.ldIntoRegisterPairAddress(&c.registers.HL, c.registers.AF.low) }},
 	0xAF: &instruction{0xAF, "XOR A", 4, 1, false, func(c *CPU) { c.xorRegisters(&c.registers.AF.low, c.registers.AF.low) }},
+	0xE0: &instruction{0xE0, "LDH (a8),A", 12, 2, false, func(c *CPU) { c.mmu.WriteBytes([]byte{c.registers.AF.low}, 0xFF00+uint16(c.operandByte())) }},
 	0xE2: &instruction{0xE2, "LD A,(C)", 8, 1, false, func(c *CPU) { c.mmu.WriteBytes([]byte{c.registers.AF.low}, 0xFF00+uint16(c.registers.BC.high)) }},
 }
 
