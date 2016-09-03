@@ -85,3 +85,34 @@ func TestLdIntoMemAndDec(t *testing.T) {
 		t.Error("Expected BC register pair to be decremented")
 	}
 }
+
+func TestPushByteOntoStack(t *testing.T) {
+	c := mockCPU()
+	c.stackPointer = 0xFFFE
+	c.pushByteOntoStack(0x04)
+
+	testhelpers.AssertByte(t, 0x04, c.mmu.ReadByte(0xFFFD))
+	testhelpers.AssertWord(t, 0xFFFD, c.stackPointer)
+}
+
+func TestPushWordOntoStack(t *testing.T) {
+	c := mockCPU()
+	c.stackPointer = 0xFFFE
+	c.pushWordOntoStack(0x9432)
+
+	testhelpers.AssertByte(t, 0x94, c.mmu.ReadByte(0xFFFD))
+	testhelpers.AssertByte(t, 0x32, c.mmu.ReadByte(0xFFFC))
+	testhelpers.AssertWord(t, 0xFFFC, c.stackPointer)
+}
+
+func TestCall(t *testing.T) {
+	c := mockCPU()
+	c.programCounter = 0x28
+	c.stackPointer = 0xFFFE
+	c.call(0x1234)
+
+	testhelpers.AssertWord(t, c.stackPointer, 0xFFFC)
+	testhelpers.AssertByte(t, 0x00, c.mmu.ReadByte(0xFFFD))
+	testhelpers.AssertByte(t, 0x2b, c.mmu.ReadByte(0xFFFC))
+	testhelpers.AssertWord(t, 0x1234, c.programCounter)
+}

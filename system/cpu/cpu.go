@@ -277,3 +277,24 @@ func (c *CPU) jumpOnCondition(offset byte, condition bool) {
 		c.programCounter += uint16(signedOffset)
 	}
 }
+
+// call stores the next opcode's position as the return point and jumps an offset.
+func (c *CPU) call(offset uint16) {
+	c.pushWordOntoStack(c.programCounter + 3)
+	c.programCounter = offset
+}
+
+// pushWordOntoStack pushes a word onto the stack
+func (c *CPU) pushWordOntoStack(word uint16) {
+	parts := make([]byte, 2)
+	binary.LittleEndian.PutUint16(parts, word)
+
+	c.pushByteOntoStack(parts[1])
+	c.pushByteOntoStack(parts[0])
+}
+
+// pushByteOntoStack decrements the stack pointer and pushes a byte onto the stack.
+func (c *CPU) pushByteOntoStack(value byte) {
+	c.stackPointer--
+	c.mmu.WriteBytes([]byte{value}, c.stackPointer)
+}

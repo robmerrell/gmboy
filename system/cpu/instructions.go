@@ -39,15 +39,18 @@ func (i *instruction) Debug() map[string]interface{} {
 		"cycles":    i.cycles,
 		"len":       i.len,
 	}
+
 }
 
 // I'm going off of this list for the info about the opcodes including the mnemonic: http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
 
 var baseInstructions = map[byte]*instruction{
 	0x00: &instruction{0x00, "NOP", 4, 1, false, func(c *CPU) {}},
+	0x06: &instruction{0x06, "LD B,d8", 8, 2, false, func(c *CPU) { c.registers.BC.low = c.operandByte() }},
 	0x0C: &instruction{0x0C, "INC C", 4, 1, false, func(c *CPU) { c.incrementRegister(&c.registers.BC.high) }},
 	0x0E: &instruction{0x0E, "LD C,d8", 8, 2, false, func(c *CPU) { c.registers.BC.high = c.operandByte() }},
 	0x11: &instruction{0x11, "LD DE,d16", 12, 3, false, func(c *CPU) { c.registers.DE.setWord(c.operandWord()) }},
+	0x1A: &instruction{0x1A, "LD A,(DE)", 8, 1, false, func(c *CPU) { c.registers.AF.low = c.mmu.ReadByte(c.registers.DE.word()) }},
 	// TODO: I'm not entirely sure how to handle cycles for these jump calls. It looks like they can vary in some way...
 	0x20: &instruction{0x20, "JR NZ,r8", 8, 2, true, func(c *CPU) {
 		cond := *c.registers.flag()&flagZ == 0 // Z flag is unset
@@ -56,9 +59,12 @@ var baseInstructions = map[byte]*instruction{
 	0x21: &instruction{0x21, "LD HL,d16", 12, 3, false, func(c *CPU) { c.registers.HL.setWord(c.operandWord()) }},
 	0x31: &instruction{0x31, "LD SP,d16", 12, 3, false, func(c *CPU) { c.stackPointer = c.operandWord() }},
 	0x32: &instruction{0x32, "LD (HL-),A", 8, 1, false, func(c *CPU) { c.ldIntoRegisterPairAddressAndDec(&c.registers.HL, c.registers.AF.low) }},
+	0x4F: &instruction{0x4F, "LD C,A", 4, 1, false, func(c *CPU) { c.registers.BC.high = c.registers.AF.low }},
 	0x3E: &instruction{0x3E, "LD A,d8", 8, 2, false, func(c *CPU) { c.registers.AF.low = c.operandByte() }},
 	0x77: &instruction{0x77, "LD (HL),A", 8, 1, false, func(c *CPU) { c.ldIntoRegisterPairAddress(&c.registers.HL, c.registers.AF.low) }},
 	0xAF: &instruction{0xAF, "XOR A", 4, 1, false, func(c *CPU) { c.xorRegisters(&c.registers.AF.low, c.registers.AF.low) }},
+	0xC5: &instruction{0xC5, "PUSH BC", 16, 1, false, func(c *CPU) { c.pushWordOntoStack(c.registers.BC.word()) }},
+	0xCD: &instruction{0xCD, "CALL a16", 24, 3, true, func(c *CPU) { c.call(c.operandWord()) }},
 	0xE0: &instruction{0xE0, "LDH (a8),A", 12, 2, false, func(c *CPU) { c.mmu.WriteBytes([]byte{c.registers.AF.low}, 0xFF00+uint16(c.operandByte())) }},
 	0xE2: &instruction{0xE2, "LD A,(C)", 8, 1, false, func(c *CPU) { c.mmu.WriteBytes([]byte{c.registers.AF.low}, 0xFF00+uint16(c.registers.BC.high)) }},
 }
