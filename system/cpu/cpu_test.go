@@ -116,3 +116,22 @@ func TestCall(t *testing.T) {
 	testhelpers.AssertByte(t, 0x2b, c.mmu.ReadByte(0xFFFC))
 	testhelpers.AssertWord(t, 0x1234, c.programCounter)
 }
+
+func TestRotateRegisterLeft(t *testing.T) {
+	c := mockCPU()
+	c.registers.setFlag(flagC)
+	c.registers.BC.setWord(0x00d3)
+	c.rotateRegisterLeft(&c.registers.BC.high)
+	testhelpers.AssertByte(t, 0xA7, c.registers.BC.high)
+	assertFlagState(t, "---C", c.registers.flagToString())
+
+	c = mockCPU()
+	c.registers.BC.setWord(0x0080)
+	c.rotateRegisterLeft(&c.registers.BC.high)
+	assertFlagState(t, "Z--C", c.registers.flagToString())
+
+	c = mockCPU()
+	c.registers.BC.setWord(0x0000)
+	c.rotateRegisterLeft(&c.registers.BC.high)
+	assertFlagState(t, "Z---", c.registers.flagToString())
+}

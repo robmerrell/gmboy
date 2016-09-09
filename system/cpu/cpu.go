@@ -298,3 +298,45 @@ func (c *CPU) pushByteOntoStack(value byte) {
 	c.stackPointer--
 	c.mmu.WriteBytes([]byte{value}, c.stackPointer)
 }
+
+// rotateRegisterLeft rotates a register left through the carry flag. Bit #7 is stored in carry flag, carry flag is moved to bit #0
+// [cf] [7, 6, 5, 4, 3, 2, 1, 0]
+//   ^---|  |  |  |  |  |  |  |
+//   |   ^--|  |  |  |  |  |  |
+//   |      ^--|  |  |  |  |  |
+//   |         ^--|  |  |  |  |
+//   |            ^--|  |  |  |
+//   |               ^--|  |  |
+//   |                  ^--|  |
+//   |                     ^--|
+//   |
+//   -------------------------^
+func (c *CPU) rotateRegisterLeft(reg *byte) {
+	carrySet := *c.registers.flag()&flagC != 0
+	bit7Set := *reg>>7&0x01 == 0x01
+
+	shifted := *reg << 1
+
+	// rotate bit #7 to the carry flag
+	if bit7Set {
+		c.registers.setFlag(flagC)
+	} else {
+		c.registers.resetFlag(flagC)
+	}
+
+	// rotate the old carry flag to bit #0
+	if carrySet {
+		shifted ^= 0x01
+	}
+
+	c.registers.resetFlag(flagN)
+	c.registers.resetFlag(flagH)
+
+	if shifted == 0x00 {
+		c.registers.setFlag(flagZ)
+	} else {
+		c.registers.resetFlag(flagZ)
+	}
+
+	*reg = shifted
+}

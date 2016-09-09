@@ -72,5 +72,6 @@ var baseInstructions = map[byte]*instruction{
 // The instruction length for the extended instructions is going to be what is in the above link-1. I believe that in the link above when they
 // say the instruction length is 2 it's because they are counting both the 0xCB byte + the instruction.
 var extendedInstructions = map[byte]*instruction{
-	0x7c: &instruction{0x7C, "BIT 7,H", 8, 1, false, func(c *CPU) { c.testRegisterBit(c.registers.HL.low, 7) }},
+	0x11: &instruction{0x11, "RL C", 8, 2, false, func(c *CPU) { c.rotateRegisterLeft(&c.registers.BC.high) }},
+	0x7C: &instruction{0x7C, "BIT 7,H", 8, 1, false, func(c *CPU) { c.testRegisterBit(c.registers.HL.low, 7) }},
 }
