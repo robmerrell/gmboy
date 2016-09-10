@@ -224,6 +224,27 @@ func (c *CPU) incrementRegister(reg *byte) {
 	*reg = sum
 }
 
+func (c *CPU) decrementRegister(reg *byte) {
+	diff := *reg - 1
+
+	c.registers.setFlag(flagN)
+
+	if diff == 0 {
+		c.registers.setFlag(flagZ)
+	} else {
+		c.registers.resetFlag(flagZ)
+	}
+
+	// half carry
+	if (int)(*reg&0xf)-(int)(1&0xf) < 0 {
+		c.registers.setFlag(flagH)
+	} else {
+		c.registers.resetFlag(flagH)
+	}
+
+	*reg = diff
+}
+
 // xorRegisters XOR's a source and operand register and saves it in the source register. C,H,N flags are reset
 // and the Z flag is set to 0 if the XOR results in a 0.
 func (c *CPU) xorRegisters(sourceRegister *byte, operandRegister byte) {
@@ -297,6 +318,12 @@ func (c *CPU) pushWordOntoStack(word uint16) {
 func (c *CPU) pushByteOntoStack(value byte) {
 	c.stackPointer--
 	c.mmu.WriteBytes([]byte{value}, c.stackPointer)
+}
+
+// popStackIntoRegisterPair pops the word in the stack currently pointed at and places it in a register pair.
+func (c *CPU) popStackIntoRegisterPair(pair *register) {
+	pair.setWord(c.mmu.ReadWord(c.stackPointer))
+	c.stackPointer += 2
 }
 
 // rotateRegisterLeft rotates a register left through the carry flag. Bit #7 is stored in carry flag, carry flag is moved to bit #0

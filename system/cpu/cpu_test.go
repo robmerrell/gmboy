@@ -69,6 +69,25 @@ func TestIncrementRegister(t *testing.T) {
 	assertFlagState(t, "----", c.registers.flagToString())
 }
 
+func TestDecrementRegister(t *testing.T) {
+	c := mockCPU()
+	c.registers.BC.low = 0xF
+	c.registers.BC.high = 0x10
+	c.registers.DE.low = 0x01
+
+	c.decrementRegister(&c.registers.BC.low)
+	testhelpers.AssertByte(t, 0x0E, c.registers.BC.low)
+	assertFlagState(t, "-N--", c.registers.flagToString())
+
+	c.decrementRegister(&c.registers.BC.high)
+	testhelpers.AssertByte(t, 0x0F, c.registers.BC.high)
+	assertFlagState(t, "-NH-", c.registers.flagToString())
+
+	c.decrementRegister(&c.registers.DE.low)
+	testhelpers.AssertByte(t, 0x00, c.registers.DE.low)
+	assertFlagState(t, "ZN--", c.registers.flagToString())
+}
+
 func TestLdIntoMemAndDec(t *testing.T) {
 	c := mockCPU()
 	c.registers.HL.setWord(0x1132)
@@ -103,6 +122,16 @@ func TestPushWordOntoStack(t *testing.T) {
 	testhelpers.AssertByte(t, 0x94, c.mmu.ReadByte(0xFFFD))
 	testhelpers.AssertByte(t, 0x32, c.mmu.ReadByte(0xFFFC))
 	testhelpers.AssertWord(t, 0xFFFC, c.stackPointer)
+}
+
+func TestPopStackIntoRegisterPair(t *testing.T) {
+	c := mockCPU()
+	c.stackPointer = 0xFFFE
+	c.pushWordOntoStack(0x1234)
+	c.popStackIntoRegisterPair(&c.registers.BC)
+
+	testhelpers.AssertWord(t, 0x1234, c.registers.BC.word())
+	testhelpers.AssertWord(t, 0xFFFE, c.stackPointer)
 }
 
 func TestCall(t *testing.T) {

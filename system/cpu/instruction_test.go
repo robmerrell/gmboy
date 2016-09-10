@@ -21,6 +21,24 @@ func assertFlagState(t *testing.T, expectedFlagString string, actualFlagString s
 	}
 }
 
+func Test0x01(t *testing.T) {
+	c := mockCPU()
+	c.mmu.WriteBytes([]byte{0x01, 0xFE, 0xFF}, 0)
+
+	c.Step()
+	testhelpers.AssertWord(t, 0xFFFE, c.registers.BC.word())
+}
+
+func Test0x05(t *testing.T) {
+	c := mockCPU()
+	c.registers.BC.low = 0x10
+	c.mmu.WriteBytes([]byte{0x05}, 0)
+
+	c.Step()
+	testhelpers.AssertByte(t, 0x0F, c.registers.BC.low)
+	assertFlagState(t, "-NH-", c.registers.flagToString())
+}
+
 func Test0x06(t *testing.T) {
 	c := mockCPU()
 	c.mmu.WriteBytes([]byte{0x06, 0x04}, 0)
@@ -140,6 +158,16 @@ func Test0xAF(t *testing.T) {
 	c.Step()
 	testhelpers.AssertByte(t, 0x00, c.registers.AF.low)
 	assertFlagState(t, "Z---", c.registers.flagToString())
+}
+
+func Test0xC1(t *testing.T) {
+	c := mockCPU()
+	c.stackPointer = 0xFFFE
+	c.pushWordOntoStack(0x1234)
+	c.mmu.WriteBytes([]byte{0xC1}, 0)
+
+	c.Step()
+	testhelpers.AssertWord(t, 0x1234, c.registers.BC.word())
 }
 
 func Test0xC5(t *testing.T) {
