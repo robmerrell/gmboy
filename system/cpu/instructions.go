@@ -69,6 +69,7 @@ var baseInstructions = map[byte]*instruction{
 	0xAF: &instruction{0xAF, "XOR A", 4, 1, false, func(c *CPU) { c.xorRegisters(&c.registers.AF.low, c.registers.AF.low) }},
 	0xC1: &instruction{0xC1, "POP BC", 12, 1, false, func(c *CPU) { c.popStackIntoRegisterPair(&c.registers.BC) }},
 	0xC5: &instruction{0xC5, "PUSH BC", 16, 1, false, func(c *CPU) { c.pushWordOntoStack(c.registers.BC.word()) }},
+	0xC9: &instruction{0xC9, "RET", 16, 1, true, func(c *CPU) { c.ret() }},
 	0xCD: &instruction{0xCD, "CALL a16", 24, 3, true, func(c *CPU) { c.call(c.operandWord()) }},
 	0xE0: &instruction{0xE0, "LDH (a8),A", 12, 2, false, func(c *CPU) { c.mmu.WriteBytes([]byte{c.registers.AF.low}, 0xFF00+uint16(c.operandByte())) }},
 	0xE2: &instruction{0xE2, "LD A,(C)", 8, 1, false, func(c *CPU) { c.mmu.WriteBytes([]byte{c.registers.AF.low}, 0xFF00+uint16(c.registers.BC.high)) }},

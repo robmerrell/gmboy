@@ -312,6 +312,12 @@ func (c *CPU) call(offset uint16) {
 	c.programCounter = offset
 }
 
+// ret pops a word from the stack and jumps to that address
+func (c *CPU) ret() {
+	c.programCounter = c.mmu.ReadWord(c.stackPointer)
+	c.stackPointer += 2
+}
+
 // pushWordOntoStack pushes a word onto the stack
 func (c *CPU) pushWordOntoStack(word uint16) {
 	parts := make([]byte, 2)

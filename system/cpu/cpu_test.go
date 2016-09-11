@@ -163,6 +163,17 @@ func TestCall(t *testing.T) {
 	testhelpers.AssertWord(t, 0x1234, c.programCounter)
 }
 
+func TestRet(t *testing.T) {
+	c := mockCPU()
+	c.programCounter = 0x28
+	c.stackPointer = 0xFFFE
+	c.call(0x1234)
+	c.ret()
+
+	testhelpers.AssertWord(t, 0xFFFE, c.stackPointer)
+	testhelpers.AssertWord(t, 0x002b, c.programCounter)
+}
+
 func TestRotateRegisterLeft(t *testing.T) {
 	c := mockCPU()
 	c.registers.setFlag(flagC)

@@ -202,6 +202,18 @@ func Test0xC5(t *testing.T) {
 	testhelpers.AssertByte(t, 0x34, c.mmu.ReadByte(0xFFFC))
 }
 
+func Test0xC9(t *testing.T) {
+	c := mockCPU()
+	c.stackPointer = 0xFFFE
+	c.pushWordOntoStack(0x1123)
+	c.mmu.WriteBytes([]byte{0xC9}, 0)
+
+	c.Step()
+
+	testhelpers.AssertWord(t, 0x1123, c.programCounter)
+	testhelpers.AssertWord(t, 0xFFFE, c.stackPointer)
+}
+
 func Test0xCD(t *testing.T) {
 	c := mockCPU()
 	c.stackPointer = 0xFFFE
