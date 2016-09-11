@@ -268,6 +268,13 @@ func (c *CPU) ldIntoRegisterPairAddress(locationRegister *register, valueRegiste
 	c.mmu.WriteBytes([]byte{valueRegister}, address)
 }
 
+// ldIntoRegisterPairAddressAndInc loads the value of the valueRegister into the memory address pointed at by the locationRegister
+// and then increments the value stored in locationRegister
+func (c *CPU) ldIntoRegisterPairAddressAndInc(locationRegister *register, valueRegister byte) {
+	c.ldIntoRegisterPairAddress(locationRegister, valueRegister)
+	locationRegister.setWord(locationRegister.word() + 1)
+}
+
 // ldIntoRegisterPairAddressAndDec loads the value of the valueRegister into the memory address pointed at by the locationRegister
 // and then decrements the value stored in locationRegister
 func (c *CPU) ldIntoRegisterPairAddressAndDec(locationRegister *register, valueRegister byte) {

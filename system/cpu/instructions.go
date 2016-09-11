@@ -59,6 +59,7 @@ var baseInstructions = map[byte]*instruction{
 		c.jumpOnCondition(c.operandByte(), cond)
 	}},
 	0x21: &instruction{0x21, "LD HL,d16", 12, 3, false, func(c *CPU) { c.registers.HL.setWord(c.operandWord()) }},
+	0x22: &instruction{0x22, "LD (HL+),A", 8, 1, false, func(c *CPU) { c.ldIntoRegisterPairAddressAndInc(&c.registers.HL, c.registers.AF.low) }},
 	0x31: &instruction{0x31, "LD SP,d16", 12, 3, false, func(c *CPU) { c.stackPointer = c.operandWord() }},
 	0x32: &instruction{0x32, "LD (HL-),A", 8, 1, false, func(c *CPU) { c.ldIntoRegisterPairAddressAndDec(&c.registers.HL, c.registers.AF.low) }},
 	0x4F: &instruction{0x4F, "LD C,A", 4, 1, false, func(c *CPU) { c.registers.BC.high = c.registers.AF.low }},

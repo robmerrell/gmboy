@@ -105,6 +105,23 @@ func TestLdIntoMemAndDec(t *testing.T) {
 	}
 }
 
+func TestLdIntoMemAndInc(t *testing.T) {
+	c := mockCPU()
+	c.registers.HL.setWord(0x1132)
+	c.registers.BC.setWord(0x1030)
+	c.registers.AF.low = 35
+
+	c.ldIntoRegisterPairAddress(&c.registers.HL, c.registers.AF.low)
+	testhelpers.AssertByte(t, 35, c.mmu.ReadByte(c.registers.HL.word()))
+
+	prevPairValue := c.registers.BC.word()
+	c.ldIntoRegisterPairAddressAndInc(&c.registers.BC, c.registers.AF.low)
+	testhelpers.AssertByte(t, 35, c.mmu.ReadByte(prevPairValue))
+	if c.registers.BC.word() != prevPairValue+1 {
+		t.Error("Expected BC register pair to be incremented")
+	}
+}
+
 func TestPushByteOntoStack(t *testing.T) {
 	c := mockCPU()
 	c.stackPointer = 0xFFFE
