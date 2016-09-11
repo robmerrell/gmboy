@@ -180,6 +180,16 @@ func Test0x77(t *testing.T) {
 	testhelpers.AssertByte(t, 0x11, c.mmu.ReadByte(c.registers.HL.word()))
 }
 
+func Test0x7B(t *testing.T) {
+	c := mockCPU()
+	c.registers.DE.high = 0x12
+	c.registers.AF.low = 0x04
+	c.mmu.WriteBytes([]byte{0x7B}, 0)
+	c.Step()
+
+	testhelpers.AssertByte(t, 0x12, c.registers.AF.low)
+}
+
 func Test0xAF(t *testing.T) {
 	c := mockCPU()
 	c.registers.AF.setWord(0xFFFE)
