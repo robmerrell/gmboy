@@ -75,6 +75,7 @@ var baseInstructions = map[byte]*instruction{
 	0xCD: &instruction{0xCD, "CALL a16", 24, 3, true, func(c *CPU) { c.call(c.operandWord()) }},
 	0xE0: &instruction{0xE0, "LDH (a8),A", 12, 2, false, func(c *CPU) { c.mmu.WriteBytes([]byte{c.registers.AF.low}, 0xFF00+uint16(c.operandByte())) }},
 	0xE2: &instruction{0xE2, "LD A,(C)", 8, 1, false, func(c *CPU) { c.mmu.WriteBytes([]byte{c.registers.AF.low}, 0xFF00+uint16(c.registers.BC.high)) }},
+	0xFE: &instruction{0xFE, "CP d8", 8, 2, false, func(c *CPU) { c.compareA(c.operandByte()) }},
 }
 
 // The instruction length for the extended instructions is going to be what is in the above link-1. I believe that in the link above when they

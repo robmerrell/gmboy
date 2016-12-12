@@ -224,25 +224,22 @@ func (c *CPU) incrementRegister(reg *byte) {
 	*reg = sum
 }
 
+// decrementRegister subtracts 1 from a register.  Z, H, flags are set where needed and N is set.
 func (c *CPU) decrementRegister(reg *byte) {
-	diff := *reg - 1
-
-	c.registers.setFlag(flagN)
-
-	if diff == 0 {
-		c.registers.setFlag(flagZ)
-	} else {
-		c.registers.resetFlag(flagZ)
-	}
-
-	// half carry
-	if (int)(*reg&0xf)-(int)(1&0xf) < 0 {
-		c.registers.setFlag(flagH)
-	} else {
-		c.registers.resetFlag(flagH)
-	}
-
+	diff := c.subtractBytes(*reg, 1)
 	*reg = diff
+}
+
+// compareA does a comparison of a value with the A register. Z, H, C flags are set where needed and N is set.
+func (c *CPU) compareA(val byte) {
+	c.subtractBytes(c.registers.AF.low, val)
+
+	if c.registers.AF.low < val {
+		c.registers.setFlag(flagC)
+	} else {
+		c.registers.resetFlag(flagC)
+
+	}
 }
 
 // xorRegisters XOR's a source and operand register and saves it in the source register. C,H,N flags are reset
@@ -379,4 +376,26 @@ func (c *CPU) rotateRegisterLeft(reg *byte) {
 	}
 
 	*reg = shifted
+}
+
+// subtractBytes subtracts two bytes and sets the appropriate flags.
+func (c *CPU) subtractBytes(byteA, byteB byte) byte {
+	diff := byteA - byteB
+
+	c.registers.setFlag(flagN)
+
+	if diff == 0 {
+		c.registers.setFlag(flagZ)
+	} else {
+		c.registers.resetFlag(flagZ)
+	}
+
+	// half carry
+	if (int)(byteA&0xf)-(int)(byteB&0xf) < 0 {
+		c.registers.setFlag(flagH)
+	} else {
+		c.registers.resetFlag(flagH)
+	}
+
+	return diff
 }
